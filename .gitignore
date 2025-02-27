@@ -5,6 +5,3 @@ venv/
 __pycache__/
 *.pyc
 *.pyo
-
-# Ignore CSV logs
-choices_log.csv
