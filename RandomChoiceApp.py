@@ -6,14 +6,16 @@ from flask import Flask, jsonify, request
 import threading
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QHBoxLayout, QFrame
 from PyQt6.QtCore import QTimer, Qt
+from pynput import keyboard
 
 # Initialize data storage
 data = []
+color1, color2 = np.random.choice(['red','green'], 2, replace=False)
 
-def log_choice(choice,color):
+def log_choice(choice, color):
     ''' Log the choice made by the user and close the application '''
     now = datetime.datetime.now()
-    entry = [now.strftime('%Y-%m-%d %H:%M:%S'), now.strftime('%A'), color, choice]
+    entry = [now.strftime('%H:%M:%S'), now.strftime('%A'), color, choice]
     data.append(entry)
     save_data()
     QApplication.quit()
@@ -33,6 +35,7 @@ class ChoiceApp(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.setup_keyboard_listener()
 
     def initUI(self):
         ''' Set up the GUI '''
@@ -45,7 +48,7 @@ class ChoiceApp(QWidget):
         time_frame = QFrame(self)
         time_frame.setStyleSheet("background-color: lightgray;")
         time_layout = QVBoxLayout()
-        self.label = QLabel(datetime.datetime.now().strftime('%H:%M'))  # Only show hour and minutes
+        self.label = QLabel(datetime.datetime.now().strftime('%H:%M')) 
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setStyleSheet("font-size: 72px; font-weight: bold; background-color: lightgray;")
         time_layout.addWidget(self.label)
@@ -61,10 +64,10 @@ class ChoiceApp(QWidget):
         button_layout = QHBoxLayout()
 
         btn_left = QPushButton("Left", self)
-        color1, color2 = np.random.choice(['red','green'], 2, replace=False)
         btn_left.setStyleSheet(f"font-size: 72px; background-color: {color1}; height: 600px;")
 
-        btn_left.clicked.connect(lambda: log_choice(0,color1))
+        btn_left.clicked.connect(lambda: log_choice(0,color1)) 
+        
         button_layout.addWidget(btn_left)
 
         btn_right = QPushButton("Right", self)
@@ -78,6 +81,26 @@ class ChoiceApp(QWidget):
     def update_time(self):
         ''' Update the displayed time '''
         self.label.setText(datetime.datetime.now().strftime('%H:%M'))
+
+    def setup_keyboard_listener(self):
+        ''' Set up keyboard listener for left and right arrow keys '''
+        self.listener = keyboard.Listener(on_press=self.on_press)
+        self.listener.start()
+
+    def on_press(self, key):
+        ''' Handle keyboard press events '''
+        try:
+            if key == keyboard.Key.left:
+                log_choice(0, color1)
+            elif key == keyboard.Key.right:
+                log_choice(1, color2)
+        except AttributeError:
+            pass
+
+    def closeEvent(self, event):
+        ''' Clean up keyboard listener when window is closed '''
+        self.listener.stop()
+        event.accept()
 
 # Flask backend to expose data and handle choices
 app = Flask(__name__)
