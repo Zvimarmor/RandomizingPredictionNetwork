@@ -7,6 +7,10 @@ import threading
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QHBoxLayout, QFrame
 from PyQt6.QtCore import QTimer, Qt
 from pynput import keyboard
+import time
+
+IS_SLEEPING = False
+SLEEP_MINUTES = 15
 
 # Initialize data storage
 data = []
@@ -35,7 +39,7 @@ class ChoiceApp(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-        self.setup_keyboard_listener()
+        #self.setup_keyboard_listener()
 
     def initUI(self):
         ''' Set up the GUI '''
@@ -122,9 +126,20 @@ def run_flask():
     app.run(port=5000, host="0.0.0.0")
 
 if __name__ == "__main__":
-    threading.Thread(target=run_flask, daemon=True).start()
-    
-    app = QApplication(sys.argv)
-    window = ChoiceApp()
-    window.show()
-    sys.exit(app.exec())
+    if IS_SLEEPING:
+        while True:
+            threading.Thread(target=run_flask, daemon=True).start()
+
+            app = QApplication(sys.argv)
+            window = ChoiceApp()
+            window.show()
+            sys.exit(app.exec())
+
+            time.sleep(SLEEP_MINUTES * 60)
+    else:
+        threading.Thread(target=run_flask, daemon=True).start()
+
+        app = QApplication(sys.argv)
+        window = ChoiceApp()
+        window.show()
+        sys.exit(app.exec())
