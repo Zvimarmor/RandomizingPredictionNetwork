@@ -143,3 +143,4 @@ if __name__ == "__main__":
         window = ChoiceApp()
         window.show()
         sys.exit(app.exec())
+

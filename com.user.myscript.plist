@@ -13,7 +13,7 @@
         </array>
 
         <key>StartInterval</key>
-        <integer>30</integer>  <!-- Runs every 900 seconds (15 minutes) -->
+        <integer>900</integer>  <!-- Runs every 900 seconds (15 minutes) -->
 
         <key>RunAtLoad</key>
         <true/>
