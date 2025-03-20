@@ -2,35 +2,42 @@ import sys
 import datetime
 import numpy as np
 import pandas as pd
-import threading
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QHBoxLayout, QFrame
 from PyQt6.QtCore import QTimer, Qt
 from pynput import keyboard
 import time
 
 # Constants
-IS_SLEEPING = False  # Enables periodic sleep mode
-SLEEP_MINUTES = 15
+IS_SLEEPING = True 
+SLEEP_MINUTES = 1
 
 data = []  # Data storage
 color1, color2 = np.random.choice(['red', 'green'], 2, replace=False)
 
-def log_choice(choice, color):
+def log_choice(choice, color,app_instance):
     """ Log the choice and save to CSV """
-    now = datetime.datetime.now()
-    entry = [now.strftime('%H:%M:%S'), now.strftime('%A'), color, choice]
+    hour = datetime.datetime.now().strftime('%H:%M')
+    date = datetime.datetime.now().strftime('%d.%m.%Y')
+    day = datetime.datetime.now().strftime('%A')
+    entry = [date, hour, day, color, choice]
     data.append(entry)
     save_data()
-    QApplication.quit()
+
+    # Close the keyboard listener before closing the app
+    if hasattr(app_instance, 'listener'):
+        app_instance.listener.stop()
+
+
+    app_instance.close()
 
 def save_data():
     """ Save the choices log locally """
     try:
         existing_df = pd.read_csv("choices_log.csv")
     except FileNotFoundError:
-        existing_df = pd.DataFrame(columns=['Timestamp', 'Day', 'Color', 'Choice'])
+        existing_df = pd.DataFrame(columns=['Date', 'Timestamp', 'Day', 'Color', 'Choice'])
     
-    new_df = pd.DataFrame(data, columns=['Timestamp', 'Day', 'Color', 'Choice'])
+    new_df = pd.DataFrame(data, columns=['Date', 'Timestamp', 'Day', 'Color', 'Choice'])
     combined_df = pd.concat([existing_df, new_df], ignore_index=True)
     combined_df.to_csv("choices_log.csv", index=False)
 
@@ -67,12 +74,12 @@ class ChoiceApp(QWidget):
         button_layout = QHBoxLayout()
         btn_left = QPushButton("Left", self)
         btn_left.setStyleSheet(f"font-size: 72px; background-color: {color1}; height: 600px;")
-        btn_left.clicked.connect(lambda: log_choice(0, color1))
+        btn_left.clicked.connect(lambda: log_choice(0, color1, self))
         button_layout.addWidget(btn_left)
         
         btn_right = QPushButton("Right", self)
         btn_right.setStyleSheet(f"font-size: 72px; background-color: {color2}; height: 600px;")
-        btn_right.clicked.connect(lambda: log_choice(1, color2))
+        btn_right.clicked.connect(lambda: log_choice(1, color2, self))
         button_layout.addWidget(btn_right)
         
         main_layout.addLayout(button_layout)
@@ -91,9 +98,9 @@ class ChoiceApp(QWidget):
         """ Handle keyboard events """
         try:
             if key == keyboard.Key.left:
-                log_choice(0, color1)
+                log_choice(0, color1, self)
             elif key == keyboard.Key.right:
-                log_choice(1, color2)
+                log_choice(1, color2, self)
         except AttributeError:
             pass
     
@@ -102,18 +109,18 @@ class ChoiceApp(QWidget):
         self.listener.stop()
         event.accept()
 
-    def run_app(self):
-        app = QApplication(sys.argv)
-        window = ChoiceApp()
-        window.show()
-        sys.exit(app.exec())
+def main():
+    """ Main function """
+    app = QApplication(sys.argv)
+    window = ChoiceApp()
+    window.show()
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    while True:
-        window = ChoiceApp()
-        window.show()
-        app.exec()
-        if IS_SLEEPING:
-            time.sleep(SLEEP_MINUTES * 60)
+    main()
+    
+    
+
+
+        
 
