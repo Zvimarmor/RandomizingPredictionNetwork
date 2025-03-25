@@ -22,12 +22,6 @@ def log_choice(choice, color,app_instance):
     entry = [date, hour, day, color, choice]
     data.append(entry)
     save_data()
-
-    # Close the keyboard listener before closing the app
-    if hasattr(app_instance, 'listener'):
-        app_instance.listener.stop()
-
-
     app_instance.close()
 
 def save_data():
