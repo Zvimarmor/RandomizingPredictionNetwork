@@ -33,6 +33,7 @@ def save_data():
     
     new_df = pd.DataFrame(data, columns=['Date', 'Timestamp', 'Day', 'Color', 'Choice'])
     combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+    print(combined_df)
     combined_df.to_csv("choices_log.csv", index=False)
 
 class ChoiceApp(QWidget):
